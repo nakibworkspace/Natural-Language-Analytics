@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Secrets & local config
+.env
+*.env.local
+
+# Docker volumes created locally for debugging
+docker-data/
+
+# Logs
+*.log
+logs/
+
+# Evaluation runs
+evaluation/runs/
+*.eval.json

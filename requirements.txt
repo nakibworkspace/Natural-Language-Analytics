@@ -1,0 +1,15 @@
+# Python deps for the lab's supporting tools, API clients, and benchmarks.
+# Puku CLI itself is NOT listed here; it is installed separately per the README.
+#
+# IMPORTANT: this project uses PEP 604 (X | Y) and PEP 585 (list[str]) syntax
+# that requires Python >= 3.10. Pydantic v2 also requires Python >= 3.8,
+# but the combination of v2 + PEP 604/585 annotations requires >= 3.10.
+# If you have Python 3.8 or 3.9, install `eval_type_backport` to enable the
+# new typing syntax in older interpreters.
+psycopg[binary]>=3.1.18
+python-dotenv>=1.0.1
+requests>=2.32.3
+pydantic>=2.7.4
+sqlparse>=0.5.0
+# Uncomment on Python 3.8 / 3.9 to enable PEP 604 / 585 syntax:
+# eval_type_backport>=0.1.0

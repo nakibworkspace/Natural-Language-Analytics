@@ -1,0 +1,144 @@
+[
+  {
+    "id": "Q01",
+    "question": "Which destination has the most rides?",
+    "expected_kind": "top_n",
+    "ground_truth_sql": "SELECT l.name, COUNT(*) AS rides FROM rides r JOIN locations l ON l.id = r.destination_location_id GROUP BY l.name ORDER BY rides DESC LIMIT 1;",
+    "expected_min_rows": 1
+  },
+  {
+    "id": "Q02",
+    "question": "What is the average fare?",
+    "expected_kind": "kpi",
+    "ground_truth_sql": "SELECT AVG(fare)::numeric(10,2) FROM rides WHERE status='completed';",
+    "expected_min_rows": 1
+  },
+  {
+    "id": "Q03",
+    "question": "Show rides by day.",
+    "expected_kind": "trend",
+    "ground_truth_sql": "SELECT date_trunc('day', requested_at) AS day, COUNT(*) FROM rides GROUP BY day ORDER BY day;",
+    "expected_min_rows": 30
+  },
+  {
+    "id": "Q04",
+    "question": "Which drivers have the lowest rating?",
+    "expected_kind": "top_n",
+    "ground_truth_sql": "SELECT code, rating FROM drivers ORDER BY rating ASC LIMIT 10;",
+    "expected_min_rows": 1
+  },
+  {
+    "id": "Q05",
+    "question": "What is the cancellation rate?",
+    "expected_kind": "kpi",
+    "ground_truth_sql": "SELECT (COUNT(*) FILTER (WHERE status='cancelled'))::float / COUNT(*) FROM rides;",
+    "expected_min_rows": 1
+  },
+  {
+    "id": "Q06",
+    "question": "Show revenue by destination.",
+    "expected_kind": "breakdown",
+    "ground_truth_sql": "SELECT l.name, SUM(r.fare)::numeric(12,2) FROM rides r JOIN locations l ON l.id = r.destination_location_id WHERE r.status='completed' GROUP BY l.name ORDER BY 2 DESC;",
+    "expected_min_rows": 5
+  },
+  {
+    "id": "Q07",
+    "question": "What are the busiest hours?",
+    "expected_kind": "distribution",
+    "ground_truth_sql": "SELECT EXTRACT(HOUR FROM requested_at)::int, COUNT(*) FROM rides GROUP BY 1 ORDER BY 2 DESC;",
+    "expected_min_rows": 12
+  },
+  {
+    "id": "Q08",
+    "question": "Show the rating distribution.",
+    "expected_kind": "rating_dist",
+    "ground_truth_sql": "SELECT rating, COUNT(*) FROM reviews GROUP BY rating ORDER BY rating;",
+    "expected_min_rows": 3
+  },
+  {
+    "id": "Q09",
+    "question": "Show the top 10 drivers.",
+    "expected_kind": "top_n",
+    "ground_truth_sql": "SELECT d.code, COUNT(*) FROM rides r JOIN drivers d ON d.id = r.driver_id WHERE r.status='completed' GROUP BY d.code ORDER BY 2 DESC LIMIT 10;",
+    "expected_min_rows": 5
+  },
+  {
+    "id": "Q10",
+    "question": "Show me the top 10 destinations by number of rides in the last 30 days.",
+    "expected_kind": "top_n",
+    "ground_truth_sql": "SELECT l.name, COUNT(*) FROM rides r JOIN locations l ON l.id = r.destination_location_id WHERE r.requested_at >= NOW() - INTERVAL '30 days' GROUP BY l.name ORDER BY 2 DESC LIMIT 10;",
+    "expected_min_rows": 5
+  },
+  {
+    "id": "Q11",
+    "question": "Average driver rating",
+    "expected_kind": "kpi",
+    "ground_truth_sql": "SELECT AVG(rating)::numeric(3,2) FROM drivers;",
+    "expected_min_rows": 1
+  },
+  {
+    "id": "Q12",
+    "question": "Average fare by destination",
+    "expected_kind": "breakdown",
+    "ground_truth_sql": "SELECT l.name, AVG(r.fare)::numeric(10,2) FROM rides r JOIN locations l ON l.id = r.destination_location_id WHERE r.status='completed' GROUP BY l.name ORDER BY 2 DESC;",
+    "expected_min_rows": 5
+  },
+  {
+    "id": "Q13",
+    "question": "Rides per day last 30 days",
+    "expected_kind": "trend",
+    "ground_truth_sql": "SELECT date_trunc('day', requested_at), COUNT(*) FROM rides WHERE requested_at >= NOW() - INTERVAL '30 days' GROUP BY 1 ORDER BY 1;",
+    "expected_min_rows": 5
+  },
+  {
+    "id": "Q14",
+    "question": "Total rides last 7 days",
+    "expected_kind": "kpi",
+    "ground_truth_sql": "SELECT COUNT(*) FROM rides WHERE requested_at >= NOW() - INTERVAL '7 days';",
+    "expected_min_rows": 1
+  },
+  {
+    "id": "Q15",
+    "question": "Total revenue last 30 days",
+    "expected_kind": "kpi",
+    "ground_truth_sql": "SELECT SUM(fare)::numeric(14,2) FROM rides WHERE status='completed' AND requested_at >= NOW() - INTERVAL '30 days';",
+    "expected_min_rows": 1
+  },
+  {
+    "id": "Q16",
+    "question": "Rides per hour of day",
+    "expected_kind": "distribution",
+    "ground_truth_sql": "SELECT EXTRACT(HOUR FROM requested_at)::int, COUNT(*) FROM rides GROUP BY 1 ORDER BY 1;",
+    "expected_min_rows": 12
+  },
+  {
+    "id": "Q17",
+    "question": "Reviews per day",
+    "expected_kind": "trend",
+    "ground_truth_sql": "SELECT date_trunc('day', created_at), COUNT(*) FROM reviews GROUP BY 1 ORDER BY 1;",
+    "expected_min_rows": 5
+  },
+  {
+    "id": "Q18",
+    "question": "What are customers complaining about?",
+    "expected_kind": "raw",
+    "ground_truth_sql": "SELECT comment FROM reviews WHERE rating <= 2 AND comment IS NOT NULL ORDER BY created_at DESC LIMIT 200;",
+    "expected_min_rows": 10
+  },
+  {
+    "id": "Q19",
+    "question": "Create a ride performance dashboard for the last 30 days showing total rides, total revenue, average fare, rides per day, top destinations, and cancellation rate.",
+    "expected_kind": "multi",
+    "ground_truth_sql": null,
+    "expected_min_rows": 0,
+    "expect_dashboard": true
+  },
+  {
+    "id": "Q20",
+    "question": "Add average driver rating to the same dashboard.",
+    "expected_kind": "kpi",
+    "ground_truth_sql": "SELECT AVG(rating)::numeric(3,2) FROM drivers;",
+    "expected_min_rows": 1,
+    "expect_dashboard_update": true
+  }
+]

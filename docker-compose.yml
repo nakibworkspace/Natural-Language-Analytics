@@ -1,0 +1,68 @@
+# Docker Compose for the Ride-Sharing AI Analytics Lab
+# Brings up:
+#   - PostgreSQL with the ride_analytics schema and seed data
+#   - Metabase pointing at PostgreSQL
+#
+# Notes:
+#   * The `version` attribute is obsolete in docker compose v2 and is ignored.
+#   * Metabase has no native arm64 image; on Apple Silicon (M1/M2/M3) the
+#     amd64 image is pulled automatically via the `platform` hint below.
+#     First start may take 1-2 minutes while the binary is emulated.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ride_postgres
+    restart: unless-stopped
+    environment:
+      # Superuser (used only for init/admin via psql, NOT by the analytics skills)
+      POSTGRES_USER: ${POSTGRES_SUPERUSER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-ride_analytics}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # schema.sql + seed.sql are auto-applied on first run (alphabetic order)
+      - ./postgres/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./postgres/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+      - ./postgres/readonly_role.sql:/docker-entrypoint-initdb.d/03-readonly.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUPERUSER:-postgres} -d ${POSTGRES_DB:-ride_analytics}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  metabase:
+    # Metabase no longer supports `MB_ADMIN_*` env-var pre-seed (it was
+    # removed in v0.50 and never worked fully in earlier versions either).
+    # The lab's `tools/metabase_provision.py` uses `POST /api/setup` to
+    # bootstrap the admin + database in one call, so no browser setup is
+    # required.
+    image: metabase/metabase:v0.50.4
+    platform: linux/amd64   # explicit so Apple Silicon doesn't print a warning
+    container_name: ride_metabase
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      MB_DB_TYPE: h2
+      MB_DB_FILE: /metabase-data/metabase.db
+      MB_SITE_LANGUAGE: en
+      MB_SITE_NAME: Ride Analytics
+      # Raise JVM heap. Default (~980MB on this VM) is too small for
+      # Metabase's first-boot migrations under amd64 emulation and the
+      # container OOM-kills mid-migration, leaving a stale migration
+      # lock that wedges the H2 DB. 2.5GB is comfortably enough.
+      # Metabase v0.50's run_metabase.sh prepends JAVA_OPTS to the JVM
+      # invocation, so this is what actually takes effect.
+      JAVA_OPTS: "-Xmx2500m"
+    ports:
+      - "${METABASE_PORT:-3000}:3000"
+    volumes:
+      - metabase-data:/metabase-data
+
+volumes:
+  pgdata:
+  metabase-data:
