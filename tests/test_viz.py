@@ -128,7 +128,10 @@ def main() -> int:
     rs = viz_settings(rating, "bar")
     assert "graph.dimension" in rs, rs
     assert isinstance(rs["graph.dimension"], list), rs
-    assert rs["graph.dimension"][2] == {"base-type": "type/Integer"}, rs
+    # _BASE_TYPE maps INTEGER/FLOAT both to type/Number (per the
+    # _BASE_TYPE comment, this is the numeric fallback Metabase
+    # accepts on all numeric X/Y axis bindings).
+    assert rs["graph.dimension"][2] == {"base-type": "type/Number"}, rs
     assert "graph.metrics" in rs and rs["graph.metrics"], rs
     print(f"  [OK] rating-distribution bar binds int dim as column-ref: {rs['graph.dimension']}")
 

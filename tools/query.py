@@ -209,7 +209,7 @@ ORDER BY day;""",
     ),
     (
         _q(
-            r"top\s+(\d+)?\s*destinations?\s+by\s+(?:rides|count)",
+            r"top\s+(\d+)?\s*destinations?\s+by\s+(?:rides|count|number(?:\s+of\s+rides)?)",
             r"destinations?\s+with\s+the\s+most\s+rides",
             r"most\s+popular\s+destinations?",
         ),

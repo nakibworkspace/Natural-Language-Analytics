@@ -450,8 +450,24 @@ def _cleanup_dashboard_layout(client: MetabaseClient, dashboard_id: int) -> None
         # missing key fields). This forces Metabase's dashboard
         # renderer to use the reconciled settings.
         merged_viz = dict(dashcard_viz) if dashcard_viz else {}
+        # Always-required axis bindings (these are what triggers the
+        # "Which fields?" prompt if missing).
         for k in ("graph.dimension", "graph.metrics", "scalar.field", "table.columns"):
             if not merged_viz.get(k) and card_viz.get(k):
+                merged_viz[k] = card_viz[k]
+        # Other viz knobs (x-axis scale, binning, show_values, colors,
+        # column_settings) — copy from card if dashcard is missing them.
+        # Without these, Metabase silently falls back to defaults that
+        # can render empty charts even when the axis bindings are right.
+        for k in (
+            "graph.x_axis.scale",
+            "graph.dimension_binning",
+            "graph.show_values",
+            "graph.label_value_frequency",
+            "graph.colors",
+            "column_settings",
+        ):
+            if merged_viz.get(k) is None and card_viz.get(k) is not None:
                 merged_viz[k] = card_viz[k]
 
         rebuilt.append({
